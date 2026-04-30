@@ -3,11 +3,16 @@ import mongoose from "mongoose";
 /**
  * Get MongoDB URI from environment variables
  */
-const mongoUrl =   process.env.MONGO_URL || process.env.MONGODB_URI;
+const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI;
 
 if (!mongoUrl) {
-  throw new Error("Missing MONGODB_URI (or MONGO_URL) environment variable");
+  throw new Error("Missing MONGO_URL (or MONGODB_URI) environment variable");
 }
+
+/**
+ * Force TypeScript to treat it as string after validation
+ */
+const safeMongoUrl: string = mongoUrl;
 
 /**
  * Global cache type to prevent multiple connections in dev/hot reload
@@ -42,7 +47,7 @@ export async function connectToDb(): Promise<typeof mongoose> {
 
   // Create new connection promise if not exists
   if (!cached.promise) {
-    cached.promise = mongoose.connect(mongoUrl, {
+    cached.promise = mongoose.connect(safeMongoUrl, {
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
@@ -54,7 +59,6 @@ export async function connectToDb(): Promise<typeof mongoose> {
     });
   }
 
-  // Wait for connection
   cached.conn = await cached.promise;
 
   return cached.conn;
