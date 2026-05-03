@@ -2,6 +2,7 @@
  * Razorpay's checkout script attaches a constructor to the global object.
  * In some bundlers / load orders it may appear as `.default` or slightly after `load`.
  */
+// for redeploying
 export type RazorpayInstance = {
   open: () => void;
   on: (event: string, handler: (data: unknown) => void) => void;
