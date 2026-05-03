@@ -74,6 +74,26 @@ function humanizeServerFieldMessage(field: string, raw: string): string {
   return raw;
 }
 
+/**
+ * Read response as text then JSON.parse. Proxies / gateways sometimes return
+ * HTML or plain "Internal Server Error" on 500 — `res.json()` would throw.
+ */
+async function parseApiJson<T extends object>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!text.trim()) return {} as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const snippet = text.replace(/\s+/g, " ").slice(0, 320).trim();
+    return {
+      ok: false,
+      error:
+        snippet ||
+        `Server returned status ${res.status} (response was not JSON).`,
+    } as T;
+  }
+}
+
 function toItemStatus(message?: string): "error" | undefined {
   return message ? "error" : undefined;
 }
@@ -167,10 +187,10 @@ export default function FormPage() {
           const res = await fetch(
             `/api/samharasubmission/check?mobile=${encodeURIComponent(m)}`
           );
-          const data = (await res.json()) as {
+          const data = await parseApiJson<{
             ok?: boolean;
             alreadySubmitted?: boolean;
-          };
+          }>(res);
           if (!cancelled && res.ok && data?.ok) {
             setMobileAlreadySubmitted(Boolean(data.alreadySubmitted));
           }
@@ -198,10 +218,10 @@ export default function FormPage() {
       body: JSON.stringify(values),
     });
 
-    const body = (await res.json().catch(() => ({}))) as {
+    const body = await parseApiJson<{
       ok?: boolean;
       error?: unknown;
-    };
+    }>(res);
 
     if (!res.ok) {
       if (res.status === 409) {
@@ -280,7 +300,7 @@ export default function FormPage() {
           contact,
         }),
       });
-      const data = (await res.json()) as {
+      const data = await parseApiJson<{
         ok?: boolean;
         error?: string;
         hint?: string;
@@ -291,7 +311,7 @@ export default function FormPage() {
         amountInr?: number;
         keyId?: string;
         prefill?: { name?: string; email?: string; contact?: string };
-      };
+      }>(res);
       if (res.status === 409) {
         setMobileAlreadySubmitted(true);
         message.error(
