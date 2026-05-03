@@ -26,6 +26,12 @@ const SamharaSubmissionSchema = new Schema<SamharaSubmissionDocument>(
     pocName: { type: String, required: false, trim: true },
     pocMobile: { type: String, required: false, trim: true },
     pocEmail: { type: String, required: false, trim: true },
+    panCard: { type: String, required: true, trim: true },
+    roomSharingWith: { type: String, required: true, trim: true },
+    tncNonRefundable: { type: Boolean, required: true },
+    tncConfirmationAfterPayment: { type: Boolean, required: true },
+    tncAirfareInsuranceExcluded: { type: Boolean, required: true },
+    tncPaymentAgencyAccount: { type: Boolean, required: true },
   },
   {
     timestamps: true,

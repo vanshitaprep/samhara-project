@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { roomSharingOptions } from "./roomSharingOptions.generated";
+
 export const zones = [
   "Mumbai",
   "Gujarat",
@@ -27,19 +29,28 @@ export const tshirtSizes = [
 ] as const;
 
 export const packageOptions = [
-  "Double Occupancy Payment through Personal Account - ₹ 71,500",
-  "Double Occupancy Payment through Company Account - ₹ 76,700",
-  "Single Occupancy Payment through Personal Account - ₹1,32,000",
-  "Single Occupancy Payment through Company - ₹ 1,41,600",
-  "Testing Money Single occupancy through Personal Account - ₹ 1",
+  "Single Occupancy – Company Payment – ₹1,45,140",
+  "Single Occupancy – Personal Payment – ₹1,35,300",
+  "Double Occupancy – Company Payment (Per Person) – ₹78,312",
+  "Double Occupancy – Personal Payment (Per Person) – ₹73,287",
+  "Testing – ₹1",
 ] as const;
 
+/** From `List.xlsx` → `data/room-sharing-list.csv` + generated module; run `npm run import-room-list`. */
+export { roomSharingOptions };
+
+const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+
+const tncMustAccept = z
+  .boolean()
+  .refine((v) => v === true, { message: "Please tick to accept" });
+
 const packageAmountInr: Record<(typeof packageOptions)[number], number> = {
-  "Double Occupancy Payment through Personal Account - ₹ 71,500": 71500,
-  "Double Occupancy Payment through Company Account - ₹ 76,700": 76700,
-  "Single Occupancy Payment through Personal Account - ₹1,32,000": 132000,
-  "Single Occupancy Payment through Company - ₹ 1,41,600": 141600,
-  "Testing Money Single occupancy through Personal Account - ₹ 1": 1,
+  "Single Occupancy – Company Payment – ₹1,45,140": 145140,
+  "Single Occupancy – Personal Payment – ₹1,35,300": 135300,
+  "Double Occupancy – Company Payment (Per Person) – ₹78,312": 78312,
+  "Double Occupancy – Personal Payment (Per Person) – ₹73,287": 73287,
+  "Testing – ₹1": 1,
 };
 
 export function getAmountForPackageOptionInr(
@@ -93,6 +104,25 @@ export const samharaSubmissionSchema = z
       .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
         message: "Enter a valid email",
       }),
+    panCard: z
+      .string()
+      .trim()
+      .min(1, "PAN is required")
+      .transform((s) => s.toUpperCase())
+      .refine((s) => panRegex.test(s), {
+        message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
+      }),
+    roomSharingWith: z
+      .string()
+      .trim()
+      .min(1, "Select who you will share the room with")
+      .refine((s) => (roomSharingOptions as readonly string[]).includes(s), {
+        message: "Please choose a valid option",
+      }),
+    tncNonRefundable: tncMustAccept,
+    tncConfirmationAfterPayment: tncMustAccept,
+    tncAirfareInsuranceExcluded: tncMustAccept,
+    tncPaymentAgencyAccount: tncMustAccept,
   })
   .superRefine((val, ctx) => {
     if (val.tshirtSize === "Other" && !val.tshirtOther) {
@@ -100,6 +130,24 @@ export const samharaSubmissionSchema = z
         code: z.ZodIssueCode.custom,
         path: ["tshirtOther"],
         message: "Please specify your T-shirt size",
+      });
+    }
+  })
+  .superRefine((val, ctx) => {
+    const p = val.payment;
+    const paid =
+      !!p &&
+      (p.orderId?.trim().length ?? 0) > 0 &&
+      (p.paymentId?.trim().length ?? 0) > 0 &&
+      (p.signature?.trim().length ?? 0) > 0 &&
+      typeof p.amountInr === "number" &&
+      Number.isFinite(p.amountInr) &&
+      p.amountInr >= 1;
+    if (!paid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payment"],
+        message: "Complete Razorpay payment (Pay Now) before you can submit.",
       });
     }
   });

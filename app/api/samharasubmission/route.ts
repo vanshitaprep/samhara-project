@@ -27,8 +27,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, id: String(doc._id) });
   } catch (err) {
-    const anyErr = err as { code?: number; keyValue?: Record<string, unknown> };
-    if (anyErr?.code === 11000 && anyErr?.keyValue?.mobileNumber) {
+    const anyErr = err as {
+      code?: number;
+      keyValue?: Record<string, unknown>;
+      keyPattern?: Record<string, number>;
+    };
+    const dupMobile =
+      anyErr?.code === 11000 &&
+      (anyErr?.keyValue?.mobileNumber != null ||
+        anyErr?.keyPattern?.mobileNumber === 1);
+    if (dupMobile) {
       return NextResponse.json(
         {
           ok: false,

@@ -1,3 +1,5 @@
+import type { ComponentPropsWithoutRef } from "react";
+
 function ShieldIcon() {
   return (
     <svg
@@ -25,12 +27,21 @@ function ShieldIcon() {
   );
 }
 
+export type PolicyCardProps = {
+  title: string;
+  bullets: string[];
+} & Omit<ComponentPropsWithoutRef<"section">, "children">;
+
 export function PolicyCard({
   title,
   bullets,
-}: Readonly<{ title: string; bullets: string[] }>) {
+  ...rest
+}: Readonly<PolicyCardProps>) {
   return (
-    <section className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm sm:p-10">
+    <section
+      className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm sm:p-10"
+      {...rest}
+    >
       <div className="flex items-center gap-3">
         <ShieldIcon />
         <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">

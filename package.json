@@ -10,23 +10,26 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import-room-list": "node scripts/import-room-sharing-list.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@swc/helpers": "^0.5.21",
     "antd": "^6.3.7",
+    "aos": "^2.3.4",
     "mongoose": "^8.19.0",
     "next": "16.2.4",
+    "razorpay": "^2.9.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.62.0",
-    "razorpay": "^2.9.6",
     "zod": "^4.1.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/aos": "^3.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
