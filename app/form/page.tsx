@@ -265,7 +265,7 @@ export default function FormPage() {
                     {...field}
                     inputMode="numeric"
                     autoComplete="tel"
-                    placeholder="10-digit number"
+                    placeholder="10 digits only, e.g. 9876543210"
                     size="large"
                   />
                 )}
@@ -393,11 +393,6 @@ export default function FormPage() {
                   {amountInr != null ? (
                     <span>
                       Amount: <span className="font-semibold">₹ {amountInr}</span>
-                      {paid ? (
-                        <span className="ml-2 font-semibold text-green-600">
-                          Paid
-                        </span>
-                      ) : null}
                     </span>
                   ) : (
                     <span>Select a package to see amount</span>
@@ -409,9 +404,9 @@ export default function FormPage() {
                   block
                   onClick={() => void startPayment()}
                   loading={isPaying}
-                  disabled={!packageOption}
+                  disabled={!packageOption || !!paid}
                 >
-                  Pay Now
+                  {paid ? "Paid" : "Pay Now"}
                 </Button>
               </div>
             </div>

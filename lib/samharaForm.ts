@@ -48,15 +48,20 @@ export function getAmountForPackageOptionInr(
   return packageAmountInr[opt];
 }
 
+const mobile10Message =
+  "Enter exactly 10 digits only (no spaces, +, or country code)";
+
+export const zMobile10Digits = z
+  .string()
+  .trim()
+  .min(1, "Mobile number is required")
+  .regex(/^\d{10}$/, mobile10Message);
+
 export const samharaSubmissionSchema = z
   .object({
     email: z.string().trim().email("Enter a valid email"),
     fullName: z.string().trim().min(1, "Full name is required"),
-    mobileNumber: z
-      .string()
-      .trim()
-      .min(1, "Mobile number is required")
-      .regex(/^\d{10}$/, "Enter a 10-digit mobile number"),
+    mobileNumber: zMobile10Digits,
     zone: z.enum(zones, { message: "Select a zone" }),
     city: z.string().trim().min(1, "City is required"),
     tshirtSize: z.enum(tshirtSizes, { message: "Select a T-shirt size" }),
@@ -79,7 +84,7 @@ export const samharaSubmissionSchema = z
       .trim()
       .optional()
       .refine((v) => !v || /^\d{10}$/.test(v), {
-        message: "Enter a 10-digit mobile number",
+        message: mobile10Message,
       }),
     pocEmail: z
       .string()

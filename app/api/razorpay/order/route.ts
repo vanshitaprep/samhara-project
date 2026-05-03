@@ -5,13 +5,14 @@ import { z } from "zod";
 import {
   getAmountForPackageOptionInr,
   packageOptions,
+  zMobile10Digits,
 } from "@/lib/samharaForm";
 
 const reqSchema = z.object({
   packageOption: z.enum(packageOptions),
   name: z.string().trim().min(1),
   email: z.string().trim().email(),
-  contact: z.string().trim().regex(/^\d{10}$/),
+  contact: zMobile10Digits,
 });
 
 export async function POST(req: Request) {
