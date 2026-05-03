@@ -119,8 +119,8 @@ const contactCards: ContactCard[] = [
   },
   {
     label: "Email support",
-    body: "gm@jatf.in",
-    href: "mailto:gm@jatf.in",
+    body: "info@jatf.in",
+    href: "mailto:info@jatf.in",
     icon: <MailIcon />,
     iconWrap: "bg-emerald-500/15 text-emerald-400",
   },

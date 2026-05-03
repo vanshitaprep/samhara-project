@@ -24,6 +24,32 @@ type LogCreate = Partial<
 > &
   Pick<RazorpayPaymentLogDocument, "status">;
 
+/** Readable message for logs + JSON `message` (Network tab); avoids `[object Object]` from SDK throws. */
+function errorToMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null) {
+    const o = err as Record<string, unknown>;
+    if (typeof o.message === "string" && o.message.trim()) return o.message;
+    const nested = o.error;
+    if (nested && typeof nested === "object") {
+      const e = nested as Record<string, unknown>;
+      if (typeof e.description === "string" && e.description.trim()) {
+        return e.description;
+      }
+      if (typeof e.reason === "string" && e.reason.trim()) return e.reason;
+    }
+    if (typeof o.description === "string" && o.description.trim()) {
+      return o.description;
+    }
+    try {
+      return JSON.stringify(o);
+    } catch {
+      return String(err);
+    }
+  }
+  return String(err);
+}
+
 async function safeLog(entry: LogCreate) {
   try {
     await connectToDb();
@@ -109,8 +135,16 @@ export async function POST(req: Request) {
         status: "order_create_failed",
         serverErrorMessage: "request_validation_failed",
       });
+      const validation = parsed.error.flatten();
+      const firstIssue = parsed.error.issues[0]?.message ?? "Invalid request";
       return NextResponse.json(
-        { ok: false, error: parsed.error.flatten() },
+        {
+          ok: false,
+          /** Short summary for Network / clients */
+          error: firstIssue,
+          /** Zod field errors (API field names: name, contact, …) */
+          validation,
+        },
         { status: 400 }
       );
     }
@@ -186,7 +220,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("FULL ERROR (razorpay/order):", err);
 
-    const message = err instanceof Error ? err.message : String(err);
+    const message = errorToMessage(err);
     const stack = err instanceof Error ? err.stack : undefined;
 
     const amountInr =
@@ -208,14 +242,16 @@ export async function POST(req: Request) {
       {
         ok: false,
         ...body,
-        ...(process.env.NODE_ENV === "development"
-          ? {
-              message,
-              ...(stack ? { stack } : {}),
-            }
+        /** Raw underlying message — always present so Network tab shows a concrete error. */
+        message,
+        ...(process.env.NODE_ENV === "development" && stack
+          ? { stack }
           : {}),
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+      }
     );
   }
 }

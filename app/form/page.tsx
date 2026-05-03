@@ -85,6 +85,14 @@ async function parseApiJson<T extends object>(res: Response): Promise<T> {
     return JSON.parse(text) as T;
   } catch {
     const snippet = text.replace(/\s+/g, " ").slice(0, 320).trim();
+    // eslint-disable-next-line no-console -- intentional debug for non-JSON error pages
+    console.error("[parseApiJson] Response was not valid JSON", {
+      url: res.url,
+      status: res.status,
+      statusText: res.statusText,
+      bodyLength: text.length,
+      bodyPreview: text.slice(0, 2500),
+    });
     return {
       ok: false,
       error:
@@ -191,11 +199,23 @@ export default function FormPage() {
             ok?: boolean;
             alreadySubmitted?: boolean;
           }>(res);
+          if (!cancelled && !res.ok) {
+            // eslint-disable-next-line no-console -- surface check API errors in DevTools
+            console.error("[Samhara /api/samharasubmission/check] Failed", {
+              status: res.status,
+              statusText: res.statusText,
+              parsedBody: data,
+            });
+          }
           if (!cancelled && res.ok && data?.ok) {
             setMobileAlreadySubmitted(Boolean(data.alreadySubmitted));
           }
-        } catch {
-          if (!cancelled) setMobileAlreadySubmitted(false);
+        } catch (err) {
+          if (!cancelled) {
+            // eslint-disable-next-line no-console
+            console.error("[Samhara mobile check] Network or unexpected error", err);
+            setMobileAlreadySubmitted(false);
+          }
         }
       })();
     }, 450);
@@ -224,6 +244,13 @@ export default function FormPage() {
     }>(res);
 
     if (!res.ok) {
+      // eslint-disable-next-line no-console -- surface server errors in DevTools
+      console.error("[Samhara submission] HTTP error", {
+        status: res.status,
+        statusText: res.statusText,
+        url: res.url,
+        body: body,
+      });
       if (res.status === 409) {
         message.error("This mobile number has already submitted the form.");
         return;
@@ -304,7 +331,8 @@ export default function FormPage() {
         ok?: boolean;
         error?: string;
         hint?: string;
-        /** Raw error (API includes in development). */
+        validation?: unknown;
+        /** Raw server message (order API includes on 500 in all environments). */
         message?: string;
         stack?: string;
         orderId?: string;
@@ -312,6 +340,42 @@ export default function FormPage() {
         keyId?: string;
         prefill?: { name?: string; email?: string; contact?: string };
       }>(res);
+      if (res.status === 400) {
+        const validation = data.validation;
+        if (isApiFlattenedError(validation)) {
+          const apiToForm: Record<
+            string,
+            FieldPath<SamharaSubmissionInput>
+          > = {
+            packageOption: "packageOption",
+            name: "fullName",
+            email: "email",
+            contact: "mobileNumber",
+          };
+          for (const [apiField, msgs] of Object.entries(
+            validation.fieldErrors
+          )) {
+            if (!msgs?.length) continue;
+            const formField = apiToForm[apiField];
+            if (!formField) continue;
+            const raw = msgs.join(" ");
+            setError(formField, {
+              type: "server",
+              message: humanizeServerFieldMessage(formField, raw),
+            });
+          }
+          if (validation.formErrors.length > 0) {
+            message.error(validation.formErrors.join(" "));
+          } else {
+            message.error(
+              typeof data.error === "string" && data.error.trim()
+                ? data.error
+                : "Please fix the highlighted fields and try again."
+            );
+          }
+          return;
+        }
+      }
       if (res.status === 409) {
         setMobileAlreadySubmitted(true);
         message.error(
@@ -321,6 +385,13 @@ export default function FormPage() {
         return;
       }
       if (!res.ok || !data?.ok) {
+        // eslint-disable-next-line no-console -- surface Razorpay order failures in DevTools
+        console.error("[Razorpay /api/razorpay/order] Failed", {
+          httpStatus: res.status,
+          httpStatusText: res.statusText,
+          url: res.url,
+          parsedBody: data,
+        });
         const errText =
           typeof data?.error === "string" && data.error.trim().length > 0
             ? data.error
@@ -481,6 +552,10 @@ export default function FormPage() {
       );
 
       rzp.open();
+    } catch (err) {
+      // eslint-disable-next-line no-console -- surface unexpected failures (e.g. fetch) in DevTools
+      console.error("[Razorpay startPayment] Unexpected error", err);
+      message.error("Could not start payment. Please try again.");
     } finally {
       setIsPaying(false);
     }
