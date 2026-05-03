@@ -284,6 +284,9 @@ export default function FormPage() {
         ok?: boolean;
         error?: string;
         hint?: string;
+        /** Raw error (API includes in development). */
+        message?: string;
+        stack?: string;
         orderId?: string;
         amountInr?: number;
         keyId?: string;
@@ -306,18 +309,36 @@ export default function FormPage() {
           typeof data?.hint === "string" && data.hint.trim().length > 0
             ? data.hint
             : undefined;
-        if (hint) {
+        const rawMessage =
+          typeof data?.message === "string" && data.message.trim().length > 0
+            ? data.message
+            : undefined;
+        const rawStack =
+          typeof data?.stack === "string" && data.stack.trim().length > 0
+            ? data.stack
+            : undefined;
+        const hasExtra = Boolean(hint || rawMessage || rawStack);
+        if (hasExtra) {
           message.open({
             type: "error",
             content: (
-              <div>
-                <div>{errText}</div>
-                <div className="mt-2 border-t border-white/15 pt-2 text-sm leading-snug opacity-95">
-                  {hint}
-                </div>
+              <div className="max-h-[min(24rem,70vh)] overflow-y-auto text-left">
+                <div className="font-medium">{errText}</div>
+                {hint ? (
+                  <div className="mt-2 text-sm leading-snug opacity-95">
+                    {hint}
+                  </div>
+                ) : null}
+                {rawMessage || rawStack ? (
+                  <pre className="mt-2 whitespace-pre-wrap break-words border-t border-white/15 pt-2 font-mono text-[11px] leading-relaxed opacity-90">
+                    {rawMessage ? `message: ${rawMessage}` : ""}
+                    {rawMessage && rawStack ? "\n\n" : ""}
+                    {rawStack ? `stack:\n${rawStack}` : ""}
+                  </pre>
+                ) : null}
               </div>
             ),
-            duration: 12,
+            duration: 20,
           });
         } else {
           message.error(errText);

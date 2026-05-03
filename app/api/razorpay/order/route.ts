@@ -33,7 +33,7 @@ async function safeLog(entry: LogCreate) {
   }
 }
 
-function orderFailureResponse(message: string) {
+function orderFailureBody(message: string): { error: string; hint?: string } {
   const lower = message.toLowerCase();
   const isMongoOrNetwork =
     lower.includes("server selection timed out") ||
@@ -67,14 +67,7 @@ function orderFailureResponse(message: string) {
       "Payment errors: Razorpay keys. Timeouts to DB: MONGO_URL / Atlas network access.";
   }
 
-  return NextResponse.json(
-    {
-      ok: false,
-      error: userMessage,
-      ...(devHint ? { hint: devHint } : {}),
-    },
-    { status: 500 }
-  );
+  return { error: userMessage, ...(devHint ? { hint: devHint } : {}) };
 }
 
 export async function POST(req: Request) {
@@ -191,7 +184,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("FULL ERROR (razorpay/order):", err);
+
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+
     const amountInr =
       parsedBody != null
         ? getAmountForPackageOptionInr(parsedBody.packageOption)
@@ -205,6 +202,20 @@ export async function POST(req: Request) {
       amountInr,
       serverErrorMessage: message,
     });
-    return orderFailureResponse(message);
+
+    const body = orderFailureBody(message);
+    return NextResponse.json(
+      {
+        ok: false,
+        ...body,
+        ...(process.env.NODE_ENV === "development"
+          ? {
+              message,
+              ...(stack ? { stack } : {}),
+            }
+          : {}),
+      },
+      { status: 500 }
+    );
   }
 }
