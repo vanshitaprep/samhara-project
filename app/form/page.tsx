@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Logo from "../../assets/logo2026.png";
 import {
   getAmountForPackageOptionInr,
+  isDoubleOccupancyPackage,
   packageOptions,
   roomSharingOptions,
   samharaSubmissionSchema,
@@ -181,6 +182,14 @@ export default function FormPage() {
       });
     }
   }, [packageOption, isPaid, setValue]);
+
+  useEffect(() => {
+    if (isDoubleOccupancyPackage(packageOption)) return;
+    setValue("roomSharingWith", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [packageOption, setValue]);
 
   useEffect(() => {
     const m = mobileNumber?.trim() ?? "";
@@ -790,30 +799,6 @@ export default function FormPage() {
               />
             </Form.Item>
 
-            <Form.Item
-              label={<RequiredLabel text="Who will you share room With" />}
-              validateStatus={toItemStatus(errors.roomSharingWith?.message)}
-              help={errors.roomSharingWith?.message}
-            >
-                <Controller
-                control={control}
-                name="roomSharingWith"
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    showSearch
-                    optionFilterProp="label"
-                    size="large"
-                    placeholder="Search or choose"
-                    options={roomSharingOptions.map((o) => ({
-                      label: o,
-                      value: o,
-                    }))}
-                  />
-                )}
-              />
-            </Form.Item>
-
             <div className="mt-10 space-y-5 rounded-2xl border border-black/5 bg-white p-5 shadow-sm sm:p-6">
               <div className="space-y-1">
                 <Typography.Text strong>
@@ -845,6 +830,36 @@ export default function FormPage() {
                   )}
                 />
               </Form.Item>
+
+              {isDoubleOccupancyPackage(packageOption) ? (
+                <Form.Item
+                  label={
+                    <RequiredLabel text="Who do you want to share the room with" />
+                  }
+                  validateStatus={toItemStatus(
+                    errors.roomSharingWith?.message
+                  )}
+                  help={errors.roomSharingWith?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="roomSharingWith"
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        showSearch
+                        optionFilterProp="label"
+                        size="large"
+                        placeholder="Search or choose a name"
+                        options={roomSharingOptions.map((o) => ({
+                          label: o,
+                          value: o,
+                        }))}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              ) : null}
 
               <Form.Item
                 validateStatus={errors.payment ? "error" : undefined}

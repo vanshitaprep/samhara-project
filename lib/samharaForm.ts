@@ -36,6 +36,14 @@ export const packageOptions = [
   "Testing – ₹1",
 ] as const;
 
+/** Roommate list applies only for double-occupancy packages. */
+export function isDoubleOccupancyPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim() ?? "";
+  return p.startsWith("Double Occupancy");
+}
+
 /** From `List.xlsx` → `data/room-sharing-list.csv` + generated module; run `npm run import-room-list`. */
 export { roomSharingOptions };
 
@@ -112,13 +120,8 @@ export const samharaSubmissionSchema = z
       .refine((s) => panRegex.test(s), {
         message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
       }),
-    roomSharingWith: z
-      .string()
-      .trim()
-      .min(1, "Select who you will share the room with")
-      .refine((s) => (roomSharingOptions as readonly string[]).includes(s), {
-        message: "Please choose a valid option",
-      }),
+    /** Required only when `packageOption` is double occupancy; otherwise ignored (see superRefine). */
+    roomSharingWith: z.string().trim(),
     tncNonRefundable: tncMustAccept,
     tncConfirmationAfterPayment: tncMustAccept,
     tncAirfareInsuranceExcluded: tncMustAccept,
@@ -130,6 +133,25 @@ export const samharaSubmissionSchema = z
         code: z.ZodIssueCode.custom,
         path: ["tshirtOther"],
         message: "Please specify your T-shirt size",
+      });
+    }
+  })
+  .superRefine((val, ctx) => {
+    if (!isDoubleOccupancyPackage(val.packageOption)) return;
+    const s = val.roomSharingWith.trim();
+    if (!s) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["roomSharingWith"],
+        message: "Select who you will share the room with",
+      });
+      return;
+    }
+    if (!(roomSharingOptions as readonly string[]).includes(s)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["roomSharingWith"],
+        message: "Please choose a valid option",
       });
     }
   })
