@@ -13,11 +13,6 @@ const nextConfig: NextConfig = {
     formats: ["image/webp", "image/avif"],
     unoptimized: true,
   },
-
-  // Better compatibility on server builds
-  experimental: {
-    forceSwcTransforms: true,
-  },
 };
 
 export default nextConfig;
