@@ -109,7 +109,7 @@ export default function Home() {
               href="/form"
               className="inline-flex h-11 items-center justify-center rounded-full bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
             >
-              Book for Samhara →
+              Register for Samhara →
             </Link>
             {/* <Link
               href="/demo"

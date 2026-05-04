@@ -120,8 +120,8 @@ export const samharaSubmissionSchema = z
       .refine((s) => panRegex.test(s), {
         message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
       }),
-    /** Required only when `packageOption` is double occupancy; otherwise ignored (see superRefine). */
-    roomSharingWith: z.string().trim(),
+    /** Required only for double occupancy; optional otherwise (see superRefine). */
+    roomSharingWith: z.string().trim().optional(),
     tncNonRefundable: tncMustAccept,
     tncConfirmationAfterPayment: tncMustAccept,
     tncAirfareInsuranceExcluded: tncMustAccept,
@@ -138,7 +138,7 @@ export const samharaSubmissionSchema = z
   })
   .superRefine((val, ctx) => {
     if (!isDoubleOccupancyPackage(val.packageOption)) return;
-    const s = val.roomSharingWith.trim();
+    const s = (val.roomSharingWith ?? "").trim();
     if (!s) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
