@@ -241,10 +241,18 @@ export default function FormPage() {
 
   const onSubmit = async (values: SamharaSubmissionInput) => {
     clearErrors();
+    /** Hidden/unmounted roommate field is omitted from RHF values — DB still requires this path. */
+    const roomSharingWith = isDoubleOccupancyPackage(values.packageOption)
+      ? (typeof values.roomSharingWith === "string" ? values.roomSharingWith : "")
+      : "";
+    const payload: SamharaSubmissionInput = {
+      ...values,
+      roomSharingWith,
+    };
     const res = await fetch("/api/samharasubmission", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
 
     const body = await parseApiJson<{

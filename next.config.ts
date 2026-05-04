@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Helps with image formats like AVIF/WebP issues in Turbopack
   images: {
     formats: ["image/webp", "image/avif"],
