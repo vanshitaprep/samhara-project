@@ -23,7 +23,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Logo from "../../assets/logo2026.png";
 import {
   getAmountForPackageOptionInr,
+  isCompanyPaymentPackage,
   isDoubleOccupancyPackage,
+  isPersonalPaymentPackage,
   packageOptions,
   roomSharingOptions,
   samharaSubmissionSchema,
@@ -150,6 +152,7 @@ export default function FormPage() {
       pocMobile: "",
       pocEmail: "",
       panCard: "",
+      gstNumber: "",
       roomSharingWith: "",
       tncNonRefundable: false,
       tncConfirmationAfterPayment: false,
@@ -162,6 +165,8 @@ export default function FormPage() {
 
   const tshirtSize = watch("tshirtSize");
   const packageOption = watch("packageOption");
+  const showGstNumberField = isCompanyPaymentPackage(packageOption);
+  const showPanCardField = isPersonalPaymentPackage(packageOption);
   const mobileNumber = watch("mobileNumber");
   const payment = watch("payment");
   const isPaid = Boolean(
@@ -190,6 +195,19 @@ export default function FormPage() {
       shouldValidate: true,
     });
   }, [packageOption, setValue]);
+
+  useEffect(() => {
+    if (showGstNumberField) {
+      setValue("panCard", "", { shouldDirty: true, shouldValidate: true });
+      return;
+    }
+    if (showPanCardField) {
+      setValue("gstNumber", "", { shouldDirty: true, shouldValidate: true });
+      return;
+    }
+    setValue("panCard", "", { shouldDirty: true, shouldValidate: true });
+    setValue("gstNumber", "", { shouldDirty: true, shouldValidate: true });
+  }, [showGstNumberField, showPanCardField, setValue]);
 
   useEffect(() => {
     const m = mobileNumber?.trim() ?? "";
@@ -241,12 +259,18 @@ export default function FormPage() {
 
   const onSubmit = async (values: SamharaSubmissionInput) => {
     clearErrors();
+    const isCompanyPayment = isCompanyPaymentPackage(values.packageOption);
+    const isPersonalPayment = isPersonalPaymentPackage(values.packageOption);
     /** Hidden/unmounted roommate field is omitted from RHF values — DB still requires this path. */
     const roomSharingWith = isDoubleOccupancyPackage(values.packageOption)
       ? (typeof values.roomSharingWith === "string" ? values.roomSharingWith : "")
       : "";
     const payload: SamharaSubmissionInput = {
       ...values,
+      panCard: isPersonalPayment ? (values.panCard ?? "").trim().toUpperCase() : "",
+      gstNumber: isCompanyPayment
+        ? (values.gstNumber ?? "").trim().toUpperCase()
+        : "",
       roomSharingWith,
     };
     const res = await fetch("/api/samharasubmission", {
@@ -785,28 +809,6 @@ export default function FormPage() {
               </Form.Item>
             ) : null}
 
-            <Form.Item
-              className="mt-8"
-              label={<RequiredLabel text="Pan Card" />}
-              validateStatus={toItemStatus(errors.panCard?.message)}
-              help={errors.panCard?.message}
-            >
-              <Controller
-                control={control}
-                name="panCard"
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    autoComplete="off"
-                    maxLength={10}
-                    placeholder="e.g. abcd1234e"
-                    size="large"
-                    className="[&::placeholder]:text-sm [&::placeholder]:font-normal [&::placeholder]:normal-case"
-                  />
-                )}
-              />
-            </Form.Item>
-
             <div className="mt-10 space-y-5 rounded-2xl border border-black/5 bg-white p-5 shadow-sm sm:p-6">
               <div className="space-y-1">
                 <Typography.Text strong>
@@ -838,6 +840,52 @@ export default function FormPage() {
                   )}
                 />
               </Form.Item>
+
+              {showGstNumberField ? (
+                <Form.Item
+                  label={<RequiredLabel text="GST Number" />}
+                  validateStatus={toItemStatus(errors.gstNumber?.message)}
+                  help={errors.gstNumber?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="gstNumber"
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        autoComplete="off"
+                        maxLength={15}
+                        placeholder="e.g. 27ABCDE1234F1Z5"
+                        size="large"
+                        className="[&::placeholder]:text-sm [&::placeholder]:font-normal [&::placeholder]:normal-case"
+                      />
+                    )}
+                  />
+                </Form.Item>
+              ) : null}
+
+              {showPanCardField ? (
+                <Form.Item
+                  label={<RequiredLabel text="Pan Card" />}
+                  validateStatus={toItemStatus(errors.panCard?.message)}
+                  help={errors.panCard?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="panCard"
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        autoComplete="off"
+                        maxLength={10}
+                        placeholder="e.g. ABCDE1234F"
+                        size="large"
+                        className="[&::placeholder]:text-sm [&::placeholder]:font-normal [&::placeholder]:normal-case"
+                      />
+                    )}
+                  />
+                </Form.Item>
+              ) : null}
 
               {isDoubleOccupancyPackage(packageOption) ? (
                 <Form.Item

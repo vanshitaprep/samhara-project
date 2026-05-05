@@ -44,10 +44,25 @@ export function isDoubleOccupancyPackage(
   return p.startsWith("Double Occupancy");
 }
 
+export function isCompanyPaymentPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim().toLowerCase() ?? "";
+  return p.includes("company payment");
+}
+
+export function isPersonalPaymentPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim().toLowerCase() ?? "";
+  return p.includes("personal payment");
+}
+
 /** From `List.xlsx` → `data/room-sharing-list.csv` + generated module; run `npm run import-room-list`. */
 export { roomSharingOptions };
 
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 const tncMustAccept = z
   .boolean()
@@ -112,14 +127,8 @@ export const samharaSubmissionSchema = z
       .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
         message: "Enter a valid email",
       }),
-    panCard: z
-      .string()
-      .trim()
-      .min(1, "PAN is required")
-      .transform((s) => s.toUpperCase())
-      .refine((s) => panRegex.test(s), {
-        message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
-      }),
+    panCard: z.string().trim().optional(),
+    gstNumber: z.string().trim().optional(),
     /** Required only for double occupancy; optional otherwise (see superRefine). */
     roomSharingWith: z.string().trim().optional(),
     tncNonRefundable: tncMustAccept,
@@ -153,6 +162,47 @@ export const samharaSubmissionSchema = z
         path: ["roomSharingWith"],
         message: "Please choose a valid option",
       });
+    }
+  })
+  .superRefine((val, ctx) => {
+    const pan = (val.panCard ?? "").trim().toUpperCase();
+    const gst = (val.gstNumber ?? "").trim().toUpperCase();
+
+    if (isCompanyPaymentPackage(val.packageOption)) {
+      if (!gst) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["gstNumber"],
+          message: "GST number is required for company payment",
+        });
+        return;
+      }
+      if (!gstRegex.test(gst)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["gstNumber"],
+          message: "Enter a valid GST number (e.g. 27ABCDE1234F1Z5)",
+        });
+      }
+      return;
+    }
+
+    if (isPersonalPaymentPackage(val.packageOption)) {
+      if (!pan) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["panCard"],
+          message: "PAN is required for personal payment",
+        });
+        return;
+      }
+      if (!panRegex.test(pan)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["panCard"],
+          message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
+        });
+      }
     }
   })
   .superRefine((val, ctx) => {

@@ -85,14 +85,15 @@ export default function Home() {
         </header>
 
         <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 text-center">
-          <h1
-            className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-slate-900 sm:text-6xl"
+          <Image
+            src={Logo}
+            alt="Samhara logo"
+            priority
+            className="h-24 w-auto sm:h-32"
             data-aos="fade-up"
             data-aos-delay="80"
             data-aos-duration="900"
-          >
-            Samhara
-          </h1>
+          />
 
           {/* <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
             Design smarter with AI that understands you.
@@ -140,10 +141,14 @@ export default function Home() {
             <PolicyCard
               title="Terms & Conditions"
               bullets={[
-                "All bookings are subject to carrier/hotel availability and confirmation.",
-                "Valid government ID (Aadhar/Passport) is mandatory for all travelers.",
-                "Samhara acts as an aggregator and is not liable for service delays by airlines or bus operators.",
-                "Itinerary changes may occur due to weather or safety regulations.",
+                "Please take a moment to fill in the details in the form at your convenience.",
+                "Participation: Samhara 2026 is an exclusive gathering curated for Patrons and Officers. Participation is limited to invitees only; spouses are not allowed.",
+                "Event Schedule - Arrival: 18th July 2026, before 12:00 Noon.",
+                "Event Schedule - Departure: 20th July 2026, post breakfast.",
+                "Contribution Details (indicative for 2-night stay): Rs 65,000 + applicable taxes (Double Occupancy).",
+                "Contribution Details (indicative for 2-night stay): Rs 1,20,000 + applicable taxes (Single Occupancy).",
+                "Form submission is accepted only after payment is completed within the form.",
+                "After completing payment, you will be redirected to submit the form. Please complete both steps.",
               ]}
             />
           </div>
@@ -163,9 +168,10 @@ export default function Home() {
             <PolicyCard
               title="Cancellation & Refunds"
               bullets={[
-                "Approved refunds will be credited to the original payment source within 7–10 working days.",
-                "Cancellation Fee: 50% charge for requests >60 days before event; 90% after that.",
-                "Less than 7 days: Generally non-refundable as per hotel/airline norms.",
+                <>
+                  Cancellation - Since this is an exclusive Invite only Event -
+                  there will be <strong>NO REFUNDS</strong>
+                </>,
                 "Service/Convenience fees are non-refundable.",
               ]}
             />
