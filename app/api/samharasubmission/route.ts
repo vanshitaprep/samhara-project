@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { connectToDb } from "@/lib/mongoose";
 import { samharaSubmissionSchema } from "@/lib/samharaForm";
+import { RazorpayPaymentLog } from "@/models/RazorpayPaymentLog";
 import { SamharaSubmission } from "@/models/SamharaSubmission";
 
 export async function POST(req: Request) {
@@ -24,6 +25,22 @@ export async function POST(req: Request) {
 
     await connectToDb();
     const doc = await SamharaSubmission.create(parsed.data);
+
+    const p = parsed.data.payment;
+    if (p?.orderId?.trim()) {
+      // Attach the saved submission id to any existing payment-log rows for this order.
+      // (Order is created + checkout events happen before the form is finally submitted.)
+      await RazorpayPaymentLog.updateMany(
+        { razorpayOrderId: p.orderId.trim() },
+        {
+          $set: {
+            samharaSubmissionId: doc._id,
+            ...(p.paymentId?.trim() ? { razorpayPaymentId: p.paymentId.trim() } : {}),
+            ...(p.signature?.trim() ? { razorpaySignature: p.signature.trim() } : {}),
+          },
+        }
+      );
+    }
 
     return NextResponse.json({ ok: true, id: String(doc._id) });
   } catch (err) {

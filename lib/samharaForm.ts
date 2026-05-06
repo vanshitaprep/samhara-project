@@ -29,11 +29,10 @@ export const tshirtSizes = [
 ] as const;
 
 export const packageOptions = [
-  "Single Occupancy – Company Payment – ₹1,45,140",
-  "Single Occupancy – Personal Payment – ₹1,35,300",
-  "Double Occupancy – Company Payment (Per Person) – ₹78,312",
-  "Double Occupancy – Personal Payment (Per Person) – ₹73,287",
-  "Testing – ₹1",
+  "Single Occupancy – Company Payment – (Rs. 1,20,000 + GST) = ₹1,42,740 (Includes 2.5% Convenience Fee and 2% TDS Deduction)",
+  "Single Occupancy – Personal Payment – (Rs. 1,20,000 + GST) = ₹1,35,300 (Includes 2.5% Convenience Fee)",
+  "Double Occupancy – Company Payment (Per Person) – (Rs. 65,000 + GST) = ₹77,317.5 (Includes 2.5% Convenience Fee and 2% TDS Deduction)",
+  "Double Occupancy – Personal Payment (Per Person) – (Rs. 65,000 + GST) = ₹73,287 (Includes 2.5% Convenience Fee)",
 ] as const;
 
 /** Roommate list applies only for double-occupancy packages. */
@@ -69,11 +68,14 @@ const tncMustAccept = z
   .refine((v) => v === true, { message: "Please tick to accept" });
 
 const packageAmountInr: Record<(typeof packageOptions)[number], number> = {
-  "Single Occupancy – Company Payment – ₹1,45,140": 145140,
-  "Single Occupancy – Personal Payment – ₹1,35,300": 135300,
-  "Double Occupancy – Company Payment (Per Person) – ₹78,312": 78312,
-  "Double Occupancy – Personal Payment (Per Person) – ₹73,287": 73287,
-  "Testing – ₹1": 1,
+  "Single Occupancy – Company Payment – (Rs. 1,20,000 + GST) = ₹1,42,740 (Includes 2.5% Convenience Fee and 2% TDS Deduction)":
+    142740,
+  "Single Occupancy – Personal Payment – (Rs. 1,20,000 + GST) = ₹1,35,300 (Includes 2.5% Convenience Fee)":
+    135300,
+  "Double Occupancy – Company Payment (Per Person) – (Rs. 65,000 + GST) = ₹77,317.5 (Includes 2.5% Convenience Fee and 2% TDS Deduction)":
+    77317.5,
+  "Double Occupancy – Personal Payment (Per Person) – (Rs. 65,000 + GST) = ₹73,287 (Includes 2.5% Convenience Fee)":
+    73287,
 };
 
 export function getAmountForPackageOptionInr(
@@ -109,7 +111,7 @@ export const samharaSubmissionSchema = z
         orderId: z.string().trim().min(1, "Missing orderId"),
         paymentId: z.string().trim().min(1, "Missing paymentId"),
         signature: z.string().trim().min(1, "Missing signature"),
-        amountInr: z.number().int().positive(),
+        amountInr: z.number().positive(),
       })
       .optional(),
     pocName: z.string().trim().optional(),

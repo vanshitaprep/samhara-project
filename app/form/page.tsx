@@ -167,6 +167,7 @@ export default function FormPage() {
   const packageOption = watch("packageOption");
   const showGstNumberField = isCompanyPaymentPackage(packageOption);
   const showPanCardField = isPersonalPaymentPackage(packageOption);
+  const showRoomSharingField = isDoubleOccupancyPackage(packageOption);
   const mobileNumber = watch("mobileNumber");
   const payment = watch("payment");
   const isPaid = Boolean(
@@ -189,12 +190,12 @@ export default function FormPage() {
   }, [packageOption, isPaid, setValue]);
 
   useEffect(() => {
-    if (isDoubleOccupancyPackage(packageOption)) return;
+    if (showRoomSharingField) return;
     setValue("roomSharingWith", "", {
       shouldDirty: true,
       shouldValidate: true,
     });
-  }, [packageOption, setValue]);
+  }, [packageOption, setValue, showRoomSharingField]);
 
   useEffect(() => {
     if (showGstNumberField) {
@@ -268,9 +269,7 @@ export default function FormPage() {
     const payload: SamharaSubmissionInput = {
       ...values,
       panCard: isPersonalPayment ? (values.panCard ?? "").trim().toUpperCase() : "",
-      gstNumber: isCompanyPayment
-        ? (values.gstNumber ?? "").trim().toUpperCase()
-        : "",
+      gstNumber: isCompanyPayment ? (values.gstNumber ?? "").trim().toUpperCase() : "",
       roomSharingWith,
     };
     const res = await fetch("/api/samharasubmission", {
@@ -843,7 +842,13 @@ export default function FormPage() {
 
               {showGstNumberField ? (
                 <Form.Item
-                  label={<RequiredLabel text="GST Number" />}
+                  label={
+                    isCompanyPaymentPackage(packageOption) ? (
+                      <RequiredLabel text="GST Number" />
+                    ) : (
+                      "GST Number"
+                    )
+                  }
                   validateStatus={toItemStatus(errors.gstNumber?.message)}
                   help={errors.gstNumber?.message}
                 >
@@ -887,11 +892,9 @@ export default function FormPage() {
                 </Form.Item>
               ) : null}
 
-              {isDoubleOccupancyPackage(packageOption) ? (
+              {showRoomSharingField ? (
                 <Form.Item
-                  label={
-                    <RequiredLabel text="Who do you want to share the room with" />
-                  }
+                  label="Who do you want to share the room with"
                   validateStatus={toItemStatus(
                     errors.roomSharingWith?.message
                   )}
