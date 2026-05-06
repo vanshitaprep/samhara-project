@@ -95,6 +95,21 @@ export default function Home() {
             data-aos-duration="900"
           />
 
+          <div
+            className="mt-5 inline-flex flex-col items-center gap-2 rounded-2xl border border-white/20 bg-white/70 px-5 py-3 text-slate-900 shadow-sm backdrop-blur sm:flex-row sm:gap-3"
+            data-aos="fade-up"
+            data-aos-delay="120"
+            data-aos-duration="900"
+          >
+            <span className="text-sm font-semibold tracking-tight sm:text-base">
+              18th &amp; 19th July, 2026
+            </span>
+            <span className="hidden h-4 w-px bg-slate-900/20 sm:block" aria-hidden />
+            <span className="text-sm font-medium text-slate-800 sm:text-base">
+              Venue: JW Marriott Golfshire, Bengaluru
+            </span>
+          </div>
+
           {/* <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
             Design smarter with AI that understands you.
             <br className="hidden sm:block" />
@@ -133,6 +148,39 @@ export default function Home() {
 
       <section className="relative bg-slate-50">
         <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-14">
+          <div className="flex items-center justify-center gap-5 sm:gap-8">
+            <div
+              className="hidden h-px flex-1 bg-gradient-to-r from-transparent via-[#B8891B]/90 to-transparent sm:block"
+              aria-hidden
+            />
+            <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg sm:max-w-md">
+              <div
+                className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-[#B8891B]/50"
+                aria-hidden
+              />
+              <Image
+                src="/image.png"
+                alt="Samhara 2026 poster"
+                width={900}
+                height={1125}
+                className="h-auto w-full"
+                sizes="(max-width: 640px) 90vw, 448px"
+                priority
+              />
+              <div className="px-4 py-3 text-left">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    Save the Date — Samhara 2026
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div
+              className="hidden h-px flex-1 bg-gradient-to-r from-transparent via-[#B8891B]/90 to-transparent sm:block"
+              aria-hidden
+            />
+          </div>
+
           <ServicesSection />
 
           <PackagesSection />
