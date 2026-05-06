@@ -10,6 +10,8 @@ export type RazorpayPaymentLogStatus =
 
 export type RazorpayPaymentLogDocument = {
   status: RazorpayPaymentLogStatus;
+  /** Link to `samharasubmission` document (set when form is submitted). */
+  samharaSubmissionId?: Schema.Types.ObjectId;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
@@ -38,6 +40,11 @@ const RazorpayPaymentLogSchema = new Schema<RazorpayPaymentLogDocument>(
         "checkout_dismissed",
         "checkout_payment_failed",
       ],
+    },
+    samharaSubmissionId: {
+      type: Schema.Types.ObjectId,
+      ref: "SamharaSubmission",
+      index: true,
     },
     razorpayOrderId: { type: String, trim: true, index: true },
     razorpayPaymentId: { type: String, trim: true, index: true },

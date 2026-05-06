@@ -29,11 +29,10 @@ export const tshirtSizes = [
 ] as const;
 
 export const packageOptions = [
-  "Single Occupancy – Company Payment – ₹1,45,140",
-  "Single Occupancy – Personal Payment – ₹1,35,300",
-  "Double Occupancy – Company Payment (Per Person) – ₹78,312",
-  "Double Occupancy – Personal Payment (Per Person) – ₹73,287",
-  "Testing – ₹1",
+  "Single Occupancy – Company Payment – (Rs. 1,20,000 + GST) = ₹1,42,740 (Includes 2.5% Convenience Fee and 2% TDS Deduction)",
+  "Single Occupancy – Personal Payment – (Rs. 1,20,000 + GST) = ₹1,35,300 (Includes 2.5% Convenience Fee)",
+  "Double Occupancy – Company Payment (Per Person) – (Rs. 65,000 + GST) = ₹77,317.5 (Includes 2.5% Convenience Fee and 2% TDS Deduction)",
+  "Double Occupancy – Personal Payment (Per Person) – (Rs. 65,000 + GST) = ₹73,287 (Includes 2.5% Convenience Fee)",
 ] as const;
 
 /** Roommate list applies only for double-occupancy packages. */
@@ -44,21 +43,39 @@ export function isDoubleOccupancyPackage(
   return p.startsWith("Double Occupancy");
 }
 
+export function isCompanyPaymentPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim().toLowerCase() ?? "";
+  return p.includes("company payment");
+}
+
+export function isPersonalPaymentPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim().toLowerCase() ?? "";
+  return p.includes("personal payment");
+}
+
 /** From `List.xlsx` → `data/room-sharing-list.csv` + generated module; run `npm run import-room-list`. */
 export { roomSharingOptions };
 
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 const tncMustAccept = z
   .boolean()
   .refine((v) => v === true, { message: "Please tick to accept" });
 
 const packageAmountInr: Record<(typeof packageOptions)[number], number> = {
-  "Single Occupancy – Company Payment – ₹1,45,140": 145140,
-  "Single Occupancy – Personal Payment – ₹1,35,300": 135300,
-  "Double Occupancy – Company Payment (Per Person) – ₹78,312": 78312,
-  "Double Occupancy – Personal Payment (Per Person) – ₹73,287": 73287,
-  "Testing – ₹1": 1,
+  "Single Occupancy – Company Payment – (Rs. 1,20,000 + GST) = ₹1,42,740 (Includes 2.5% Convenience Fee and 2% TDS Deduction)":
+    142740,
+  "Single Occupancy – Personal Payment – (Rs. 1,20,000 + GST) = ₹1,35,300 (Includes 2.5% Convenience Fee)":
+    135300,
+  "Double Occupancy – Company Payment (Per Person) – (Rs. 65,000 + GST) = ₹77,317.5 (Includes 2.5% Convenience Fee and 2% TDS Deduction)":
+    77317.5,
+  "Double Occupancy – Personal Payment (Per Person) – (Rs. 65,000 + GST) = ₹73,287 (Includes 2.5% Convenience Fee)":
+    73287,
 };
 
 export function getAmountForPackageOptionInr(
@@ -94,7 +111,7 @@ export const samharaSubmissionSchema = z
         orderId: z.string().trim().min(1, "Missing orderId"),
         paymentId: z.string().trim().min(1, "Missing paymentId"),
         signature: z.string().trim().min(1, "Missing signature"),
-        amountInr: z.number().int().positive(),
+        amountInr: z.number().positive(),
       })
       .optional(),
     pocName: z.string().trim().optional(),
@@ -112,14 +129,8 @@ export const samharaSubmissionSchema = z
       .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
         message: "Enter a valid email",
       }),
-    panCard: z
-      .string()
-      .trim()
-      .min(1, "PAN is required")
-      .transform((s) => s.toUpperCase())
-      .refine((s) => panRegex.test(s), {
-        message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
-      }),
+    panCard: z.string().trim().optional(),
+    gstNumber: z.string().trim().optional(),
     /** Required only for double occupancy; optional otherwise (see superRefine). */
     roomSharingWith: z.string().trim().optional(),
     tncNonRefundable: tncMustAccept,
@@ -153,6 +164,47 @@ export const samharaSubmissionSchema = z
         path: ["roomSharingWith"],
         message: "Please choose a valid option",
       });
+    }
+  })
+  .superRefine((val, ctx) => {
+    const pan = (val.panCard ?? "").trim().toUpperCase();
+    const gst = (val.gstNumber ?? "").trim().toUpperCase();
+
+    if (isCompanyPaymentPackage(val.packageOption)) {
+      if (!gst) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["gstNumber"],
+          message: "GST number is required for company payment",
+        });
+        return;
+      }
+      if (!gstRegex.test(gst)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["gstNumber"],
+          message: "Enter a valid GST number (e.g. 27ABCDE1234F1Z5)",
+        });
+      }
+      return;
+    }
+
+    if (isPersonalPaymentPackage(val.packageOption)) {
+      if (!pan) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["panCard"],
+          message: "PAN is required for personal payment",
+        });
+        return;
+      }
+      if (!panRegex.test(pan)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["panCard"],
+          message: "Enter a valid 10-character PAN (e.g. ABCDE1234F)",
+        });
+      }
     }
   })
   .superRefine((val, ctx) => {

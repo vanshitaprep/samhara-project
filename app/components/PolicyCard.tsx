@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 function ShieldIcon() {
   return (
@@ -29,7 +29,7 @@ function ShieldIcon() {
 
 export type PolicyCardProps = {
   title: string;
-  bullets: string[];
+  bullets: ReactNode[];
 } & Omit<ComponentPropsWithoutRef<"section">, "children">;
 
 export function PolicyCard({
@@ -51,7 +51,7 @@ export function PolicyCard({
 
       <ul className="mt-6 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
         {bullets.map((b, idx) => (
-          <li key={`${idx}-${b}`}>{b}</li>
+          <li key={`${idx}`}>{b}</li>
         ))}
       </ul>
     </section>

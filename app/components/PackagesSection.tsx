@@ -56,22 +56,32 @@ function ChevronIcon({ className }: Readonly<{ className?: string }>) {
 
 const packages = [
   {
-    title: "Majestic Himachal",
+    title: "Single Occupancy - Company Payment",
+    price: "(Rs. 1,20,000 + GST) =  ₹1,45,140 (includes 2.5% Convenience Fee)",
     rating: "4.8",
-    nights: "5N/6D",
+    nights: "2N/3D",
     gradient: "from-sky-200 via-slate-200 to-slate-300",
   },
   {
-    title: "Kerala Backwaters",
+    title: "Single Occupancy - Personal Payment",
+    price: "( Rs. 1,20,000 + GST ) = ₹1,35,300 (Includes 2.5% Convenience Fee)",
     rating: "4.9",
-    nights: "4N/5D",
+    nights: "2N/3D",
     gradient: "from-emerald-200 via-teal-100 to-cyan-200",
   },
   {
-    title: "Dubai Skyline Tour",
+    title: "Double Occupancy - Company Payment (Per Person)",
+    price: "( Rs. 65,000 + GST ) = ₹78,312 (Includes 2.5% Convenience Fee)",
     rating: "4.7",
-    nights: "4N/5D",
+    nights: "2N/3D",
     gradient: "from-amber-100 via-orange-100 to-rose-100",
+  },
+  {
+    title: "Double Occupancy - Personal Payment (Per Person)",
+    price: "( Rs. 65,000 + GST ) =  ₹73,287 (Includes 2.5% Convenience Fee)",
+    rating: "4.8",
+    nights: "2N/3D",
+    gradient: "from-violet-100 via-fuchsia-100 to-pink-100",
   },
 ] as const;
 
@@ -84,7 +94,7 @@ export function PackagesSection() {
             Packages
           </h2>
           <p className="mt-1 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
-            Explore our best hand-picked holiday packages.
+          Explore our best hand-picked holiday packages.- Explore room occupancy options for Samhara 2026.
           </p>
         </div>
         <Link
@@ -97,7 +107,7 @@ export function PackagesSection() {
         </Link>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {packages.map((pkg) => (
           <a
             key={pkg.title}
@@ -126,7 +136,7 @@ export function PackagesSection() {
                   <h3 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
                     {pkg.title}
                   </h3>
-                  <p className="mt-1 text-sm text-slate-500">Get exclusive quotes</p>
+                  <p className="mt-1 text-sm text-slate-500">{pkg.price}</p>
                 </div>
                 <span
                   className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:bg-slate-800"
