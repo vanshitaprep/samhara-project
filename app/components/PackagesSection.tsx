@@ -101,7 +101,7 @@ export function PackagesSection() {
           href="/form"
           className="inline-flex shrink-0 items-center justify-center self-start rounded-full border border-blue-600 bg-white px-5 py-2.5 text-sm font-semibold text-blue-600 shadow-sm transition-colors hover:bg-blue-50 sm:self-auto"
         >
-        Register for Samhara
+          Register for Samhara
         </Link>
       </div>
 

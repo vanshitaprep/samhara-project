@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Samhara",
   description: "Design smarter with AI that understands you.",
+  icons: {
+    icon: [{ url: "/image.png" }],
+  },
 };
 
 export default function RootLayout({
