@@ -78,6 +78,7 @@ export default function Home() {
                   className="inline-flex h-9 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
                 >
                   Form
+                  
                 </Link>
               </div>
             </div>
