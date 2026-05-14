@@ -26,6 +26,7 @@ import {
   isCompanyPaymentPackage,
   isDoubleOccupancyPackage,
   isPersonalPaymentPackage,
+  isSingleOccupancyPackage,
   packageOptions,
   roomSharingOptions,
   samharaSubmissionSchema,
@@ -834,6 +835,7 @@ export default function FormPage() {
                       options={packageOptions.map((o) => ({
                         label: o,
                         value: o,
+                        disabled: isSingleOccupancyPackage(o),
                       }))}
                     />
                   )}

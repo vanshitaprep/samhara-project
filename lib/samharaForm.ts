@@ -43,6 +43,13 @@ export function isDoubleOccupancyPackage(
   return p.startsWith("Double Occupancy");
 }
 
+export function isSingleOccupancyPackage(
+  packageOption: string | undefined | null
+): boolean {
+  const p = packageOption?.trim() ?? "";
+  return p.startsWith("Single Occupancy");
+}
+
 export function isCompanyPaymentPackage(
   packageOption: string | undefined | null
 ): boolean {
